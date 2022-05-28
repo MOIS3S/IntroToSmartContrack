@@ -7,13 +7,13 @@ contract CrowdFunding {
     string public name;
     string public description;
     address payable public author;
-    string public state = "Opened";
+    uint256 public state;
     uint256 public funds;
     uint256 public fundRaisingGoal;
 
     event ProjectFunded(string projectId, uint256 value);
 
-    event ProjectStateChanged(string id, string state);
+    event ProjectStateChanged(string id, uint256 state);
 
     constructor(
         string memory _id,
@@ -42,12 +42,15 @@ contract CrowdFunding {
     }
 
     function fundProject() public payable isNotAuthor {
+        require(state != 1, "The project can not recive funds");
+        require(msg.value > 0, "Fund value must be greater than 0");
         author.transfer(msg.value);
         funds += msg.value;
         emit ProjectFunded(id, msg.value);
     }
 
-    function changeProjectState(string calldata newstate) public isAuthor {
+    function changeProjectState(uint256 newstate) public isAuthor {
+        require(state != newstate, "New state must be different");
         state = newstate;
         emit ProjectStateChanged(id, newstate);
     }
