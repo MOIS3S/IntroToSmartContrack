@@ -3,12 +3,17 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 contract CrowdFunding {
+    enum FundraisingState {
+        Opened,
+        Closed
+    }
+
     struct Project {
         string id;
         string name;
         string description;
         address payable author;
-        uint256 state;
+        FundraisingState state;
         uint256 funds;
         uint256 fundraisingGoal;
     }
@@ -17,7 +22,7 @@ contract CrowdFunding {
 
     event ProjectFunded(string projectId, uint256 value);
 
-    event ProjectStateChanged(string id, uint256 state);
+    event ProjectStateChanged(string id, FundraisingState state);
 
     constructor(
         string memory _id,
@@ -30,7 +35,7 @@ contract CrowdFunding {
             _name,
             _description,
             payable(msg.sender),
-            0,
+            FundraisingState.Opened,
             0,
             _fundraisingGoal
         );
@@ -53,14 +58,17 @@ contract CrowdFunding {
     }
 
     function fundProject() public payable isNotAuthor {
-        require(project.state != 1, "The project can not receive funds");
+        require(
+            project.state != FundraisingState.Closed,
+            "The project can not receive funds"
+        );
         require(msg.value > 0, "Fund value must be greater than 0");
         project.author.transfer(msg.value);
         project.funds += msg.value;
         emit ProjectFunded(project.id, msg.value);
     }
 
-    function changeProjectState(uint256 newState) public isAuthor {
+    function changeProjectState(FundraisingState newState) public isAuthor {
         require(project.state != newState, "New state must be different");
         project.state = newState;
         emit ProjectStateChanged(project.id, newState);
